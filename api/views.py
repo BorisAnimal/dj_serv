@@ -14,6 +14,58 @@ import re
 ERROR = 'error_msg'
 
 
+def dump_all_from_account(request):
+	resp = {ERROR: ''}
+	req = get_headers(request)
+	print('\nHELLO>>>>>>>>>>>>>>>>>>>>\n')
+	try:
+		user = get_user_from_token(req['TOKEN'])
+	except ObjectDoesNotExist as e:
+		resp[ERROR] = 'incorrect TOKEN'
+		return JsonResponse(resp)
+	#Database request
+	accs = Accounts.objects.filter(owner_id=user.id).values('description', 'login', 'password')
+	#Parsing of the request
+	values = []
+	for i in accs:
+		values.append(i)
+
+	return JsonResponse(values, safe=False)
+
+
+def wipe_all_from_account(request):
+	resp = {ERROR: ''}
+	req = get_headers(request)
+	print('\nHELLO>>>>>>>>>>>>>>>>>>>>\n')
+	try:
+		user = get_user_from_token(req['TOKEN'])
+	except ObjectDoesNotExist as e:
+		resp[ERROR] = 'incorrect TOKEN'
+		return JsonResponse(resp)
+	#Database request
+	accs = Accounts.objects.filter(owner_id=user.id)
+	apps = Applets.objects.filter(owner_id=user.id)
+
+	apps_count = apps.count()
+	accs_count = accs.count()
+
+	accs.delete()
+	apps.delete()
+
+	resp['applets_deleted'] = apps
+	resp['accounts_deleted'] = accs
+
+	return JsonResponse(resp)
+
+
+def send_data_to_applet(request):
+	pass
+
+
+def register_applet(request):
+	pass
+
+
 def applets_descriptions(request):
 	resp = {ERROR: ''}
 	req = get_headers(request)
