@@ -14,6 +14,7 @@ import re
 ERROR = 'error_msg'
 
 
+@csrf_exempt
 def dump_all_from_account(request):
 	resp = {ERROR: ''}
 	req = get_headers(request)
@@ -33,6 +34,7 @@ def dump_all_from_account(request):
 	return JsonResponse(values, safe=False)
 
 
+@csrf_exempt
 def wipe_all_from_account(request):
 	resp = {ERROR: ''}
 	req = get_headers(request)
@@ -58,6 +60,7 @@ def wipe_all_from_account(request):
 	return JsonResponse(resp)
 
 
+@csrf_exempt
 def send_data_to_applet(request):
 	pass
 
