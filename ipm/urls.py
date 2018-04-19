@@ -24,6 +24,7 @@ urlpatterns = [
     url(r'^users/check/', t_views.obtain_auth_token), #CheckUser feature
     url(r'^accounts/descriptions/', views.accounts_descriptions), #SelectAccount feature
     url(r'^accounts/', views.add_account), #Add new account to the user's account in system
+    url(r'^applets/descriptions/', views.applets_descriptions), #SelectAccount feature
 ]
 
 '''

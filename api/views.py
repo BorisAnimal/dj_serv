@@ -14,6 +14,25 @@ import re
 ERROR = 'error_msg'
 
 
+def applets_descriptions(request):
+	resp = {ERROR: ''}
+	req = get_headers(request)
+	print('\nHELLO>>>>>>>>>>>>>>>>>>>>\n')
+	try:
+		user = get_user_from_token(req['TOKEN'])
+	except ObjectDoesNotExist as e:
+		resp[ERROR] = 'incorrect TOKEN'
+		return JsonResponse(resp)
+	#Database request
+	instance = Applets.objects.filter(owner_id=user.id).values('description', 'id')
+	#Parsing of the request
+	values = []
+	for i in instance:
+		values.append(i)
+
+	return JsonResponse(values, safe=False)
+
+
 def accounts_descriptions(request):
 	resp = {ERROR: ''}
 	req = get_headers(request)
