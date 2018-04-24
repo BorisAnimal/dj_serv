@@ -21,14 +21,15 @@ from rest_framework.authtoken import views as t_views
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-    url(r'^users/check/$', t_views.obtain_auth_token), #CheckUser feature
-    url(r'^accounts/descriptions/$', views.accounts_descriptions), #SelectAccount feature
-    url(r'^accounts/$', views.add_account), #Add new account to the user's account in system
-    url(r'^applets/descriptions/$', views.applets_descriptions), #SelectApplet feature
-    url(r'^accounts/dump$', views.dump_all_from_account), #Dump all data
-    url(r'^accounts/wipe$', views.wipe_all_from_account), #Delete all data
-    url(r'^accounts/transfer$', views.send_data_to_applet), #Send account's data to applet
-    url(r'^applets/register$', views.register_applet), #add applet to the system
+    url(r'^users/check/$', t_views.obtain_auth_token), #+CheckUser feature
+    url(r'^accounts/descriptions/$', views.accounts_descriptions), #+SelectAccount feature
+    url(r'^accounts/$', views.add_account), #+Add new account to the user's account in system
+    url(r'^users/changepass/$', views.change_master_password), #+- Change Master
+    url(r'^applets/descriptions/$', views.applets_descriptions), #-+SelectApplet feature 
+    url(r'^accounts/dump$', views.dump_all_from_account), #-Dump all data
+    url(r'^accounts/wipe$', views.wipe_all_from_account), #-Delete all data
+    url(r'^accounts/transfer$', views.send_data_to_applet), #-Send account's data to applet
+    url(r'^applets/register$', views.register_applet), #-add applet to the system
 
 ]
 

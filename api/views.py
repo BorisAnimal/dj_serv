@@ -6,12 +6,43 @@ from django.views.decorators.http import require_http_methods
 
 from rest_framework.authtoken.models import Token
 
+import json
+
 from api.models import Accounts
 from api.models import Applets
 
 import re
 
 ERROR = 'error_msg'
+
+
+@csrf_exempt
+def change_master_password(request):
+	resp = {ERROR: ''}
+	req = get_headers(request)
+	print('\nHELLO>>>>>>>>>>>>>>>>>>>>\n')
+	try:
+		user = get_user_from_token(req['TOKEN'])
+	except ObjectDoesNotExist as e:
+		resp[ERROR] = 'incorrect TOKEN'
+		return JsonResponse(resp)
+	npass = req['PASSWORD']
+	if npass :
+		user.set_password(npass)
+	else: 
+		resp[ERROR] = 'new password not set!'
+		return JsonResponse(resp)
+	accounts =  json.loads(request.body)
+	print(accounts)
+	for tmp in accounts:
+		acc = Accounts.objects.filter(owner_id=user.id, id=tmp['id'])[0]
+		print("Was\npass: {}\nlogin: {}\nBecame\npass: {}\nlogin: {}\n".format(acc.password, acc.login, tmp['password'], tmp['login']))
+		acc.password = tmp['password']
+		acc.login = tmp['login']
+		acc.save()
+	return JsonResponse(resp)
+
+
 
 
 @csrf_exempt
@@ -25,7 +56,7 @@ def dump_all_from_account(request):
 		resp[ERROR] = 'incorrect TOKEN'
 		return JsonResponse(resp)
 	#Database request
-	accs = Accounts.objects.filter(owner_id=user.id).values('description', 'login', 'password')
+	accs = Accounts.objects.filter(owner_id=user.id).values('id', 'description', 'login', 'password')
 	#Parsing of the request
 	values = []
 	for i in accs:
