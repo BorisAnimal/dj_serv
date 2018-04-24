@@ -37,6 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'djangosecure',
+    'sslserver',
     'api',
     'rest_framework',
     'rest_framework.authtoken',
@@ -70,6 +72,12 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+MIDDLEWARE_CLASSES = (
+    'djangosecure.middleware.SecurityMiddleware'
+)
+
+SECURE_SSL_REDIRECT = True
 
 ROOT_URLCONF = 'ipm.urls'
 
