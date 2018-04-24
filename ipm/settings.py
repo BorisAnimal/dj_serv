@@ -25,8 +25,8 @@ SECRET_KEY = '9+yz6jnea*era64i2!io^k81pqsbqdye75^sel-lu&+^b%7$4*'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-# ALLOWED_HOSTS = ['0.0.0.0', '10.0.2.2', 'localhost', '127.0.0.1', '192.168.1.183']
-ALLOWED_HOSTS = ['127.0.0.1']
+ALLOWED_HOSTS = ['0.0.0.0', '10.0.2.2', 'localhost', '127.0.0.1', '192.168.1.183', '10.240.22.236']
+# ALLOWED_HOSTS = ['127.0.0.1']
 
 # Application definition
 
@@ -38,7 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'djangosecure',
-    'sslserver',
+    # 'sslserver',
+    'sockserv',
     'api',
     'rest_framework',
     'rest_framework.authtoken',
@@ -77,7 +78,7 @@ MIDDLEWARE = [
 #     'djangosecure.middleware.SecurityMiddleware'
 # )
 
-SECURE_SSL_REDIRECT = True
+# SECURE_SSL_REDIRECT = True
 
 ROOT_URLCONF = 'ipm.urls'
 

@@ -1,18 +1,16 @@
-from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
-from django.views.decorators.http import require_http_methods
+from django.http import JsonResponse
 
 from rest_framework.authtoken.models import Token
 
-import json
+from api.models import Accounts, Applets
 
-from api.models import Accounts
-from api.models import Applets
+from sockserv.apps import getlist, send_data
 
-import re
-import traceback
+import re, traceback, json
 
 ERROR = 'error_msg'
 
@@ -98,11 +96,33 @@ def wipe_all_from_account(request):
 
 @csrf_exempt
 def send_data_to_applet(request):
-	pass
+	resp = {ERROR: ''}
+	req = get_headers(request)
+	print('\nHELLO>>>>>>>>>>>>>>>>>>>>\n')
+	try:
+		user = get_user_from_token(req['TOKEN'])
+	except ObjectDoesNotExist as e:
+		resp[ERROR] = 'incorrect TOKEN'
+		return JsonResponse(resp)
+	#Select
+	try: 
+		acc_id = request.POST['accountID']
+		app_id = request.POST['appletID']
+		print('acc: {}\napp: {}'.format(acc_id, app_id))
+	except:
+		print('wrong fields')
+		resp[ERROR] = 'Wrong fields'
+	#Send
+	try:
+		acc = Accounts.objects.get(owner_id=user, id=acc_id).values('login', 'password')
+		send_data(app_id, acc.login, acc.password)
+	except:
+		print('wrong values')
+		resp[ERROR] = 'wrong values'
+
+	return JsonResponse(resp)
 
 
-def register_applet(request):
-	pass
 
 
 def applets_descriptions(request):
@@ -114,14 +134,11 @@ def applets_descriptions(request):
 	except ObjectDoesNotExist as e:
 		resp[ERROR] = 'incorrect TOKEN'
 		return JsonResponse(resp)
-	#Database request
-	instance = Applets.objects.filter(owner_id=user.id).values('description', 'id')
-	#Parsing of the request
-	values = []
-	for i in instance:
-		values.append(i)
+	#Sockserv request
+	l = getlist(user.username)
+	print(l)
 
-	return JsonResponse(values, safe=False)
+	return JsonResponse(l, safe=False)
 
 
 def accounts_descriptions(request):
