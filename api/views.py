@@ -12,6 +12,7 @@ from api.models import Accounts
 from api.models import Applets
 
 import re
+import traceback
 
 ERROR = 'error_msg'
 
@@ -35,11 +36,15 @@ def change_master_password(request):
 	accounts =  json.loads(request.body)
 	print(accounts)
 	for tmp in accounts:
-		acc = Accounts.objects.filter(owner_id=user.id, id=tmp['id'])[0]
-		print("Was\npass: {}\nlogin: {}\nBecame\npass: {}\nlogin: {}\n".format(acc.password, acc.login, tmp['password'], tmp['login']))
-		acc.password = tmp['password']
-		acc.login = tmp['login']
-		acc.save()
+		try:
+			acc = Accounts.objects.filter(owner_id=user.id, id=tmp['id'])[0]
+			print("Was\npass: {}\nlogin: {}\nBecame\npass: {}\nlogin: {}\n".format(acc.password, acc.login, tmp['password'], tmp['login']))
+			acc.password = tmp['password']
+			acc.login = tmp['login']
+			acc.save()
+		except:
+			print("Error while changing Master password!\npas: {}\nlogin: {}".format(tmp.password, tmp.login))
+			traceback.print_exc()
 	return JsonResponse(resp)
 
 

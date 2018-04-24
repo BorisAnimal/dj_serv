@@ -73,9 +73,9 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-MIDDLEWARE_CLASSES = (
-    'djangosecure.middleware.SecurityMiddleware'
-)
+# MIDDLEWARE_CLASSES = (
+#     'djangosecure.middleware.SecurityMiddleware'
+# )
 
 SECURE_SSL_REDIRECT = True
 
