@@ -18,6 +18,24 @@ send_to_applet_url = sockets_server + '/sendDataToApplet'
 
 ERROR = 'error_msg'
 
+@csrf_exempt
+def signup(request):
+	req = get_headers(request)
+	if request.method == 'POST':
+		print('\nHELLO>>>>>>>>>>>>>>>>>>>>\n')
+		print(request.POST)
+		print(request.POST['login'])
+		login = request.POST['login']
+		password = request.POST['password']
+		if login is None or password is None:
+			return HttpResponseBadRequest(content='Empty field!')
+		print('login: {}\npassword: {}'.format(login, password))
+		user = User(username=login)
+		user.set_password(password)
+		user.save()
+		return JsonResponse({})
+	else:
+		return HttpResponseBadRequest(content="Incorrect request type")
 
 @csrf_exempt
 def change_master_password(request):
@@ -88,8 +106,8 @@ def wipe_all_from_account(request):
 	accs.delete()
 	apps.delete()
 
-	resp['applets_deleted'] = apps
-	resp['accounts_deleted'] = accs
+	resp['applets_deleted'] = apps_count
+	resp['accounts_deleted'] = accs_count
 
 	return JsonResponse(resp)
 
