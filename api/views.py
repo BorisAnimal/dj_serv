@@ -2,15 +2,21 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseBadRequest
 
 from rest_framework.authtoken.models import Token
 
 from api.models import Accounts, Applets
 
-from sockserv.apps import getlist, send_data
+# from sockserv.apps import getlist, send_data
 
-import re, traceback, json
+import re, traceback, json, requests
+
+import requests
+
+sockets_server = 'http://10.240.22.236:5000'
+applets_list_url = sockets_server + '/getlist'
+send_to_applet_url = sockets_server + '/sendDataToApplet'
 
 ERROR = 'error_msg'
 
@@ -23,14 +29,12 @@ def change_master_password(request):
 	try:
 		user = get_user_from_token(req['TOKEN'])
 	except ObjectDoesNotExist as e:
-		resp[ERROR] = 'incorrect TOKEN'
-		return JsonResponse(resp)
+		return HttpResponseBadRequest(content='incorrect TOKEN')
 	npass = req['PASSWORD']
 	if npass :
 		user.set_password(npass)
 	else: 
-		resp[ERROR] = 'new password not set!'
-		return JsonResponse(resp)
+		return HttpResponseBadRequest(content='incorrect TOKEN')
 	accounts =  json.loads(request.body)
 	print(accounts)
 	for tmp in accounts:
@@ -56,8 +60,7 @@ def dump_all_from_account(request):
 	try:
 		user = get_user_from_token(req['TOKEN'])
 	except ObjectDoesNotExist as e:
-		resp[ERROR] = 'incorrect TOKEN'
-		return JsonResponse(resp)
+		return HttpResponseBadRequest(content='incorrect TOKEN')
 	#Database request
 	accs = Accounts.objects.filter(owner_id=user.id).values('id', 'description', 'login', 'password')
 	#Parsing of the request
@@ -76,8 +79,7 @@ def wipe_all_from_account(request):
 	try:
 		user = get_user_from_token(req['TOKEN'])
 	except ObjectDoesNotExist as e:
-		resp[ERROR] = 'incorrect TOKEN'
-		return JsonResponse(resp)
+		return HttpResponseBadRequest(content='incorrect TOKEN')
 	#Database request
 	accs = Accounts.objects.filter(owner_id=user.id)
 	apps = Applets.objects.filter(owner_id=user.id)
@@ -93,6 +95,23 @@ def wipe_all_from_account(request):
 
 	return JsonResponse(resp)
 
+# Invokes request to other server
+def applets_descriptions(request):
+	resp = {ERROR: ''}
+	req = get_headers(request)
+	print('\nHELLO>>>>>>>>>>>>>>>>>>>>\n')
+	try:
+		user = get_user_from_token(req['TOKEN'])
+	except ObjectDoesNotExist as e:
+		return HttpResponseBadRequest(content='incorrect TOKEN')
+	#Sockserv request
+	r = requests.get(applets_list_url, params={'login':user.username})
+	print(r.text)
+	l = r.json()['results']
+	print(l)
+
+	return JsonResponse(l, safe=False)
+
 
 @csrf_exempt
 def send_data_to_applet(request):
@@ -103,7 +122,7 @@ def send_data_to_applet(request):
 		user = get_user_from_token(req['TOKEN'])
 	except ObjectDoesNotExist as e:
 		resp[ERROR] = 'incorrect TOKEN'
-		return JsonResponse(resp)
+		return HttpResponseBadRequest(content='incorrect TOKEN')
 	#Select
 	try: 
 		acc_id = request.POST['accountID']
@@ -111,34 +130,34 @@ def send_data_to_applet(request):
 		print('acc: {}\napp: {}'.format(acc_id, app_id))
 	except:
 		print('wrong fields')
-		resp[ERROR] = 'Wrong fields'
+		return HttpResponseBadRequest(content='Wrong fields')
 	#Send
 	try:
-		acc = Accounts.objects.get(owner_id=user, id=acc_id).values('login', 'password')
-		send_data(app_id, acc.login, acc.password)
+		acc = Accounts.objects.get(owner_id=user, id=acc_id) #.values('login', 'password')
+		r = requests.post(send_to_applet_url, data={'appletid':app_id, 'login': acc.login, 'pass': acc.password})
 	except:
 		print('wrong values')
 		resp[ERROR] = 'wrong values'
 
 	return JsonResponse(resp)
 
-
-
-
-def applets_descriptions(request):
+def get_account(request):
 	resp = {ERROR: ''}
 	req = get_headers(request)
 	print('\nHELLO>>>>>>>>>>>>>>>>>>>>\n')
 	try:
 		user = get_user_from_token(req['TOKEN'])
 	except ObjectDoesNotExist as e:
-		resp[ERROR] = 'incorrect TOKEN'
-		return JsonResponse(resp)
-	#Sockserv request
-	l = getlist(user.username)
-	print(l)
-
-	return JsonResponse(l, safe=False)
+		return HttpResponseBadRequest(content='incorrect TOKEN')
+	#Database access
+	acc = Accounts.objects.get(owner_id=user, id=req['ACCOUNTID'])
+	resp = {
+	'id': acc.id,
+	'description': acc.description,
+	'password': acc.password,
+	'login': acc.login,
+	}
+	return JsonResponse(resp)
 
 
 def accounts_descriptions(request):
@@ -148,8 +167,7 @@ def accounts_descriptions(request):
 	try:
 		user = get_user_from_token(req['TOKEN'])
 	except ObjectDoesNotExist as e:
-		resp[ERROR] = 'incorrect TOKEN'
-		return JsonResponse(resp)
+		return HttpResponseBadRequest(content='incorrect TOKEN')
 	#Database request
 	instance = Accounts.objects.filter(owner_id=user.id).values('description', 'id')
 	#Parsing of the request
@@ -168,8 +186,7 @@ def add_account(request):
 	try:
 		user = get_user_from_token(req['TOKEN'])
 	except ObjectDoesNotExist as e:
-		resp[ERROR] = 'incorrect TOKEN'
-		return JsonResponse(resp)
+		return HttpResponseBadRequest(content='incorrect TOKEN')
 
 	#TODO: handle fields empty errors.
 
@@ -177,9 +194,8 @@ def add_account(request):
 	print(request.POST['login'])
 	login = request.POST['login']
 	password = request.POST['password']
-	if not (login or password):
-		resp[ERROR] = 'empty password or login'
-		return JsonResponse(resp)
+	if login is None or password is None:
+		return HttpResponseBadRequest(content='Empty field!')
 	description = ''
 	if 'description' in request.POST:
 		description = request.POST['description']
@@ -192,6 +208,23 @@ def add_account(request):
 	else:
 		acc = Accounts(owner_id=user, login=login, password=password, description=description)
 	acc.save()
+
+	return JsonResponse({})
+
+@csrf_exempt
+def delete_account(request):
+	resp = {ERROR: ''}
+	req = get_headers(request)
+	print('\nHELLO>>>>>>>>>>>>>>>>>>>>\n')
+	try:
+		user = get_user_from_token(req['TOKEN'])
+	except ObjectDoesNotExist as e:
+		return HttpResponseBadRequest(content='incorrect TOKEN')
+
+	print(request.POST)
+	acc_id = request.POST['accountID']
+	acc = Accounts.objects.get(owner_id=user, id=acc_id)
+	acc.delete()
 
 	return JsonResponse({})
 

@@ -1,0 +1,1 @@
+cmd.exe /k "myvenv\Scripts\activate && python manage.py runserver 10.240.22.236:8000"

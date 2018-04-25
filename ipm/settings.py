@@ -39,7 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'djangosecure',
     # 'sslserver',
-    'sockserv',
+    # 'sockserv',
     'api',
     'rest_framework',
     'rest_framework.authtoken',

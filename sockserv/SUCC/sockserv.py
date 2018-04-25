@@ -1,22 +1,15 @@
-from django.apps import AppConfig
-import pickle, time
 import hashlib as hl
+import json
+import pickle
+import time
 from socket import *
 from threading import Thread
 
-from django.contrib import auth
+import requests
 
-class SockservConfig(AppConfig):
-    name = 'sockserv'
-
-    def ready(self):
-    	print("HEllo from sockets!")
-    	Thread(target=Initializer().run).start()
-    	print("Socket server runned")
-    	
-
-
-host = 'localhost'
+host = '127.0.0.1'
+djhost = '10.240.22.236'
+djport = 8000
 port = 26464
 buf = 4096
 curCon = {}
@@ -27,19 +20,16 @@ def unzip(x):
 
 
 def CHECK_USER(log, pas):
-    # TODO by BORIAN
-    user = auth.authenticate(username=log, password=pas)
-    if user is None:
-    	return False
-    else:
-    	return True
+    headers = {'Content-type': 'application/json'}
+    res = requests.post('http://{}:{}/users/check/'.format(djhost,djport), data=json.dumps({"username":log,"password":pas}),headers=headers).json()
+    print(res)
+    return 'token' in res
 
 
 def get_applet_id(login: str):
     return hl.sha1((login + str(time.time()) + 'flaKK>DJang0').encode()).hexdigest()
 
 
-# NONCHECKED
 def send_data(id, ADlog, ADpas):
     curCon[id][-1].send(pickle.dumps({"log": ADlog, "pas": ADpas}))
 
@@ -66,16 +56,16 @@ def getlist(login):
 
 
 class CheckFailedException(Exception):
-    def init(self, message, errors):
-        super().init(message)
+    def __init__(self, message, errors):
+        super().__init__(message)
         self.errors = errors
 
 
 class HandlerThread(Thread):
-    def init(self, tuple):
+    def __init__(self, tuple):
         client_socket = tuple[0]
         address = tuple[-1]
-        Thread.init(self)
+        Thread.__init__(self)
         dict = pickle.loads(client_socket.recv(buf))
         self.client = client_socket
         self.address = address
@@ -98,9 +88,8 @@ class HandlerThread(Thread):
             pass
         finally:
             curCon.pop(self.cid)
-            self.client.shutdown()
             self.client.close()
-            print("Applet {} disconnected , now curCon is {}".format(self.hostname,list(curCon.items())))
+            print("Applet {} disconnected , now curCon is {}".format(self.hostname,curCon))
             pass
 
 
@@ -111,15 +100,13 @@ class Initializer:
         succ = socket()
         succ.bind(addr)
         succ.listen(8)
+        print('Server started')
         while True:
             try:
                 h = HandlerThread(succ.accept())
                 print("{} connected, client = {}, address = {}".format(h.address, h.client is not None, h.address))
-                print("CurCon is {} now".format(list(curCon.items())))
+                print("CurCon is {} now".format(curCon))
             except CheckFailedException as e:
                 print("User check failed with login = {}, password = {}".format(e.errors['log'], e.errors['log']))
             else:
                 h.start()
-        succ.shutdown()
-        succ.close()
-
