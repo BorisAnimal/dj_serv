@@ -8,8 +8,6 @@ from rest_framework.authtoken.models import Token
 
 from api.models import Accounts, Applets
 
-# from sockserv.apps import getlist, send_data
-
 import re, traceback, json, requests
 
 import requests

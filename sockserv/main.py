@@ -4,7 +4,7 @@ import SUCC.sockserv as ss
 
 app = Flask(__name__)
 
-addr = '10.240.22.236'
+addr = '10.240.19.13'
 
 @app.route('/getlist', methods=['GET'])
 def getl():

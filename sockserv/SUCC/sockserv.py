@@ -8,7 +8,7 @@ from threading import Thread
 import requests
 
 host = '127.0.0.1'
-djhost = '10.240.22.236'
+djhost = '10.240.19.13'
 djport = 8000
 port = 26464
 buf = 4096
