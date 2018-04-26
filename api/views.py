@@ -12,7 +12,7 @@ import re, traceback, json, requests
 
 import requests
 
-sockets_server = 'http://10.240.19.13:5000'
+sockets_server = 'http://10.240.18.136:5000'
 applets_list_url = sockets_server + '/getlist'
 send_to_applet_url = sockets_server + '/sendDataToApplet'
 
