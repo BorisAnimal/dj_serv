@@ -1,1 +1,1 @@
-cmd.exe /k "myvenv\Scripts\activate && python manage.py runserver 10.240.19.13:8000"
+cmd.exe /k "python start_dj.py"

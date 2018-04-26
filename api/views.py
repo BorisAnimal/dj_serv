@@ -12,7 +12,11 @@ import re, traceback, json, requests
 
 import requests
 
-sockets_server = 'http://10.240.18.136:5000'
+import sys
+sys.path.append(sys.path[0] + "/..")
+from ip import *
+
+sockets_server = 'http://{}:{}'.format(get_ip(), FLASK_PORT) #'http://10.240.18.136:5000'
 applets_list_url = sockets_server + '/getlist'
 send_to_applet_url = sockets_server + '/sendDataToApplet'
 
@@ -150,7 +154,7 @@ def send_data_to_applet(request):
 	#Send
 	try:
 		acc = Accounts.objects.get(owner_id=user, id=acc_id) #.values('login', 'password')
-		r = requests.post(send_to_applet_url, data={'appletid':app_id, 'login': acc.login, 'pass': acc.password})
+		r = requests.post(send_to_applet_url, data={'appletid':app_id, 'login': acc.login, 'pass': acc.password, 'description': acc.description})
 	except:
 		print('wrong values')
 		resp[ERROR] = 'wrong values'

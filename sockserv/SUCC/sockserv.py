@@ -6,17 +6,25 @@ from socket import *
 from threading import Thread
 
 import requests
+import sys
+sys.path.append(sys.path[0] + "/..")
+# print(sys.path)
+from ip import SOCK_SERV_ADDRES, SOCK_SERV_PORT, DJ_PORT, get_ip
 
-host = '127.0.0.1'
-djhost = '10.240.19.13'
-djport = 8000
-port = 26464
+
+host = SOCK_SERV_ADDRES
+port = SOCK_SERV_PORT
+
+djhost = get_ip()
+djport = DJ_PORT
+
 buf = 4096
 curCon = {}
 
 
 def unzip(x):
     return list(zip(*x))
+
 
 
 def CHECK_USER(log, pas):
@@ -30,8 +38,8 @@ def get_applet_id(login: str):
     return hl.sha1((login + str(time.time()) + 'flaKK>DJang0').encode()).hexdigest()
 
 
-def send_data(id, ADlog, ADpas):
-    curCon[id][-1].send(pickle.dumps({"log": ADlog, "pas": ADpas}))
+def send_data(id, ADlog, ADpas, Descr):
+    curCon[id][-1].send(pickle.dumps({"log": ADlog, "pas": ADpas, 'descr':Descr}))
 
 
 def accept_connection(login, ip, hostname, sock):
@@ -41,7 +49,6 @@ def accept_connection(login, ip, hostname, sock):
 
 
 def getlist(login):
-    print("collecting list")
     try:
         a = list(filter(lambda x: x[-1][0] == login, curCon.items()))
     except IndexError:
@@ -77,20 +84,20 @@ class HandlerThread(Thread):
         else:
             self.cid = accept_connection(self.login, self.address, self.hostname, self.client)
             print(
-                "{}'d handler created with id {} having login {} and password {}".format(self.address, self.cid, dict['login'],
-                                                                                         dict['password']))
+                "Handler for {}({}:{}) created with id {}\n".format(self.hostname,self.address[0],self.address[-1],self.cid))
 
     def run(self):
         try:
             while True:
-                print("Client {} sent: {}".format(self.hostname,self.client.recv(1024)))
+                print("Client {} sent: {}\n".format(self.hostname,self.client.recv(1024)))
         except ConnectionResetError:
             pass
         finally:
             curCon.pop(self.cid)
             self.client.close()
-            print("Applet {} disconnected , now curCon is {}".format(self.hostname,curCon))
+            print("Applet {} disconnected , now curCon is {}\n".format(self.hostname,curCon))
             pass
+
 
 
 class Initializer:
@@ -104,9 +111,9 @@ class Initializer:
         while True:
             try:
                 h = HandlerThread(succ.accept())
-                print("{} connected, client = {}, address = {}".format(h.address, h.client is not None, h.address))
-                print("CurCon is {} now".format(curCon))
+                print("{} connected, address = {}:{}\n".format(h.address, h.address[0],h.address[-1]))
+                print("CurCon is {} now\n".format(curCon))
             except CheckFailedException as e:
-                print("User check failed with login = {}, password = {}".format(e.errors['log'], e.errors['log']))
+                print("User check failed with login = {}, password = {}\n".format(e.errors['log'], e.errors['pas']))
             else:
                 h.start()
