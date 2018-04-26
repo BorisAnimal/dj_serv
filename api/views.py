@@ -10,7 +10,7 @@ from api.models import Accounts, Applets
 
 import re, traceback, json, requests
 
-import requests
+import requests, ast
 
 import sys
 sys.path.append(sys.path[0] + "/..")
@@ -55,9 +55,19 @@ def change_master_password(request):
 		user.set_password(npass)
 	else: 
 		return HttpResponseBadRequest(content='incorrect TOKEN')
-	accounts =  json.loads(request.body)
-	print(accounts)
-	for tmp in accounts:
+	print('body:\n', request.body, '\n')
+	body = "'" + request.body.decode("utf-8") + "'"
+	body = body.replace('\\\"', '"')[2:-2]
+	print("keknuto: ", body)
+	print(type(body))
+	accounts =  json.loads(body)
+	print(accounts,"\n\n")
+	# print(type(accounts))
+	# d = ast.literal_eval(accounts)
+	# print(d)
+	for tmp in  accounts:
+		# tmp = d[k]
+		print(tmp)
 		try:
 			acc = Accounts.objects.filter(owner_id=user.id, id=tmp['id'])[0]
 			print("Was\npass: {}\nlogin: {}\nBecame\npass: {}\nlogin: {}\n".format(acc.password, acc.login, tmp['password'], tmp['login']))
@@ -65,8 +75,9 @@ def change_master_password(request):
 			acc.login = tmp['login']
 			acc.save()
 		except:
-			print("Error while changing Master password!\npas: {}\nlogin: {}".format(tmp.password, tmp.login))
+			print("Error while changing Master password!\npas: {}\nlogin: {}")#.format(tmp.password, tmp.login))
 			traceback.print_exc()
+			return HttpResponseBadRequest()
 	return JsonResponse(resp)
 
 
